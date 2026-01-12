@@ -5,15 +5,20 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:frontend": "cd frontend && npm run build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cdk:deploy": "cd aws/cdk && npm install && cdk deploy",
+    "cdk:destroy": "cd aws/cdk && cdk destroy",
+    "deploy:lambda": "./scripts/deploy-lambda.sh"
   },
   "dependencies": {
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "@neondatabase/serverless": "^0.9.0",
-    "next-auth": "^4.24.0",
+    "@aws-sdk/client-dynamodb": "^3.500.0",
+    "@aws-sdk/lib-dynamodb": "^3.500.0",
+    "@aws-sdk/client-ssm": "^3.500.0",
     "axios": "^1.6.0",
     "zod": "^3.22.0",
     "@tanstack/react-table": "^8.11.0",

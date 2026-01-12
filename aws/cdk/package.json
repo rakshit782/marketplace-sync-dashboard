@@ -1,0 +1,21 @@
+{
+  "name": "marketplace-sync-cdk",
+  "version": "1.0.0",
+  "description": "AWS CDK infrastructure for marketplace sync dashboard",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.120.0",
+    "constructs": "^10.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "aws-cdk": "^2.120.0"
+  }
+}
