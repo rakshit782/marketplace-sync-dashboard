@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import Dashboard from './components/Dashboard';
 import Header from './components/Header';
 
@@ -32,9 +33,14 @@ function AppContent() {
 
   // Show login/register pages
   const path = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
+  
   if (!isAuthenticated) {
     if (path === '/register') {
       return <RegisterPage />;
+    }
+    if (path === '/reset-password' && searchParams.has('token')) {
+      return <ResetPasswordPage />;
     }
     return <LoginPage />;
   }
