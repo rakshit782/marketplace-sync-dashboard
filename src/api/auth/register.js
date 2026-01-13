@@ -1,17 +1,23 @@
 /**
  * User registration endpoint
+ * Uses Neon database (CRED_DATABASE_URL)
  */
 
 const { neon } = require('@neondatabase/serverless');
 const { hashPassword } = require('../../lib/auth/jwt');
 
-const sql = neon(process.env.DATABASE_URL);
+function getCredDb() {
+  const credDatabaseUrl = process.env.CRED_DATABASE_URL;
+  if (!credDatabaseUrl) {
+    throw new Error('CRED_DATABASE_URL is not set');
+  }
+  return neon(credDatabaseUrl);
+}
 
 exports.handler = async (event) => {
   try {
     const { email, password, fullName, organizationName } = JSON.parse(event.body || '{}');
 
-    // Validation
     if (!email || !password || !organizationName) {
       return {
         statusCode: 400,
@@ -22,6 +28,8 @@ exports.handler = async (event) => {
         }),
       };
     }
+
+    const sql = getCredDb();
 
     // Check if user exists
     const existingUser = await sql`
@@ -41,8 +49,6 @@ exports.handler = async (event) => {
 
     // Create organization slug
     const slug = organizationName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-
-    // Begin transaction
     const passwordHash = hashPassword(password);
 
     // Create user

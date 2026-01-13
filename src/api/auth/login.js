@@ -1,11 +1,18 @@
 /**
  * User login endpoint
+ * Uses Neon database (CRED_DATABASE_URL)
  */
 
 const { neon } = require('@neondatabase/serverless');
 const { verifyPassword, createToken, generateRefreshToken, TOKEN_EXPIRY } = require('../../lib/auth/jwt');
 
-const sql = neon(process.env.DATABASE_URL);
+function getCredDb() {
+  const credDatabaseUrl = process.env.CRED_DATABASE_URL;
+  if (!credDatabaseUrl) {
+    throw new Error('CRED_DATABASE_URL is not set');
+  }
+  return neon(credDatabaseUrl);
+}
 
 exports.handler = async (event) => {
   try {
@@ -21,6 +28,8 @@ exports.handler = async (event) => {
         }),
       };
     }
+
+    const sql = getCredDb();
 
     // Get user
     const [user] = await sql`
@@ -117,7 +126,7 @@ exports.handler = async (event) => {
           fullName: user.full_name,
         },
         organization: selectedOrg,
-        organizations, // All available orgs for switching
+        organizations,
       }),
     };
   } catch (error) {

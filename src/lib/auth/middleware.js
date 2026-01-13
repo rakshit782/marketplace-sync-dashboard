@@ -1,11 +1,23 @@
 /**
  * Authentication middleware for Lambda functions
+ * Uses Neon database (CRED_DATABASE_URL) for auth
  */
 
 const { verifyToken } = require('./jwt');
 const { neon } = require('@neondatabase/serverless');
 
-const sql = neon(process.env.DATABASE_URL);
+/**
+ * Get Neon connection for credentials database
+ */
+function getCredDb() {
+  const credDatabaseUrl = process.env.CRED_DATABASE_URL;
+  
+  if (!credDatabaseUrl) {
+    throw new Error('CRED_DATABASE_URL is not set');
+  }
+
+  return neon(credDatabaseUrl);
+}
 
 /**
  * Extract token from Authorization header
@@ -40,6 +52,8 @@ async function authenticate(event) {
   if (!payload) {
     throw new Error('Invalid or expired token');
   }
+
+  const sql = getCredDb();
 
   // Verify session in database
   const session = await sql`
@@ -150,4 +164,5 @@ module.exports = {
   hasRole,
   withAuth,
   extractToken,
+  getCredDb,
 };

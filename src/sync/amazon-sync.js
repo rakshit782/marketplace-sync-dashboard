@@ -1,29 +1,33 @@
 /**
  * Amazon Product Sync Engine
- * Fetches all products from Amazon and stores in DynamoDB
+ * Fetches products from Amazon and stores in DynamoDB (organization-scoped)
  */
 
+const { getCredentials } = require('../lib/config/credentials');
 const { getAmazonAccessToken } = require('../lib/auth/amazon');
-const { getParameter } = require('../lib/aws/ssm');
-const { putItem } = require('../lib/aws/dynamodb');
+const { batchPutProducts } = require('../lib/aws/dynamodb');
+const { withAuth } = require('../lib/auth/middleware');
 
-exports.handler = async (event) => {
-  console.log('Starting Amazon product sync...');
+async function syncHandler(event) {
+  const { organizationId } = event.auth;
+  
+  console.log(`Starting Amazon product sync for organization ${organizationId}...`);
   
   let totalProcessed = 0;
   let totalFailed = 0;
   const startTime = Date.now();
 
   try {
-    const accessToken = await getAmazonAccessToken();
-    const marketplaceId = await getParameter('/marketplace-sync/amazon/marketplace-id');
+    // Get organization-specific credentials
+    const credentials = await getCredentials('amazon', organizationId);
+    const accessToken = await getAmazonAccessToken(credentials);
     
     let nextToken = null;
     let hasMore = true;
 
     while (hasMore) {
       const params = new URLSearchParams({
-        marketplaceIds: marketplaceId,
+        marketplaceIds: credentials.marketplaceId || 'ATVPDKIKX0DER',
         pageSize: '20',
       });
 
@@ -50,36 +54,31 @@ exports.handler = async (event) => {
 
       console.log(`Fetched ${items.length} items from Amazon`);
 
-      // Store items in DynamoDB
-      for (const item of items) {
-        try {
-          const product = {
-            pk: `PRODUCT#${item.asin || item.identifiers?.marketplaceSkus?.[0]}`,
-            sk: 'METADATA',
-            marketplace: 'amazon',
-            asin: item.asin,
-            sku: item.identifiers?.marketplaceSkus?.[0] || item.asin,
-            title: item.summaries?.[0]?.itemName || '',
-            brand: item.summaries?.[0]?.brand || '',
-            category: item.summaries?.[0]?.productType || '',
-            image_url: item.images?.[0]?.images?.[0]?.link || '',
-            updated_at: new Date().toISOString(),
-            synced_at: new Date().toISOString(),
-          };
+      // Transform and batch write to DynamoDB
+      const products = items.map(item => ({
+        sku: item.identifiers?.marketplaceSkus?.[0] || item.asin,
+        marketplace: 'amazon',
+        asin: item.asin,
+        title: item.summaries?.[0]?.itemName || '',
+        brand: item.summaries?.[0]?.brand || '',
+        category: item.summaries?.[0]?.productType || '',
+        image_url: item.images?.[0]?.images?.[0]?.link || '',
+        synced_at: new Date().toISOString(),
+      }));
 
-          await putItem(product);
-          totalProcessed++;
-        } catch (error) {
-          console.error(`Failed to store item ${item.asin}:`, error);
-          totalFailed++;
-        }
+      try {
+        await batchPutProducts(products, organizationId);
+        totalProcessed += products.length;
+      } catch (error) {
+        console.error('Failed to store batch:', error);
+        totalFailed += products.length;
       }
 
       // Check for next page
       nextToken = data.pagination?.nextToken;
       hasMore = !!nextToken && items.length > 0;
 
-      // Rate limiting - sleep 1 second between pages
+      // Rate limiting
       if (hasMore) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
@@ -114,4 +113,7 @@ exports.handler = async (event) => {
       }),
     };
   }
-};
+}
+
+// Wrap with auth middleware
+exports.handler = withAuth(syncHandler, 'member');
