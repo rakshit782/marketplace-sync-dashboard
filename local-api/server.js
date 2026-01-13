@@ -76,6 +76,39 @@ app.post('/api/auth/update-password', async (req, res) => {
   }
 });
 
+// Credentials routes
+const credentialsListHandler = require('../src/api/credentials/list');
+const credentialsSaveHandler = require('../src/api/credentials/save');
+
+app.get('/api/credentials', async (req, res) => {
+  try {
+    const result = await credentialsListHandler.handler({
+      httpMethod: 'GET',
+      headers: req.headers,
+      auth: req.auth // Added by auth middleware if exists
+    });
+    res.status(result.statusCode).json(JSON.parse(result.body));
+  } catch (error) {
+    console.error('Credentials list error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/credentials/:marketplace', async (req, res) => {
+  try {
+    const result = await credentialsSaveHandler.handler({
+      httpMethod: 'PUT',
+      headers: req.headers,
+      pathParameters: { marketplace: req.params.marketplace },
+      body: JSON.stringify({ marketplace: req.params.marketplace, credentials: req.body.credentials })
+    });
+    res.status(result.statusCode).json(JSON.parse(result.body));
+  } catch (error) {
+    console.error('Credentials save error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Products routes
 const productsListHandler = require('../src/api/products/list');
 
@@ -89,22 +122,6 @@ app.get('/api/products', async (req, res) => {
     res.status(result.statusCode).json(JSON.parse(result.body));
   } catch (error) {
     console.error('Products error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Credentials routes
-const credentialsListHandler = require('../src/api/credentials/list');
-
-app.get('/api/credentials', async (req, res) => {
-  try {
-    const result = await credentialsListHandler.handler({
-      httpMethod: 'GET',
-      headers: req.headers
-    });
-    res.status(result.statusCode).json(JSON.parse(result.body));
-  } catch (error) {
-    console.error('Credentials error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
