@@ -1,0 +1,170 @@
+{
+  "north_america": {
+    "us": {
+      "name": "United States",
+      "domain": "amazon.com",
+      "marketplace_id": "ATVPDKIKX0DER",
+      "country_code": "US",
+      "currency": "USD",
+      "endpoint": "https://sellingpartnerapi-na.amazon.com",
+      "region": "na"
+    },
+    "ca": {
+      "name": "Canada",
+      "domain": "amazon.ca",
+      "marketplace_id": "A2EUQ1WTGCTBG2",
+      "country_code": "CA",
+      "currency": "CAD",
+      "endpoint": "https://sellingpartnerapi-na.amazon.com",
+      "region": "na"
+    },
+    "mx": {
+      "name": "Mexico",
+      "domain": "amazon.com.mx",
+      "marketplace_id": "A1AM78C64UM0Y8",
+      "country_code": "MX",
+      "currency": "MXN",
+      "endpoint": "https://sellingpartnerapi-na.amazon.com",
+      "region": "na"
+    },
+    "br": {
+      "name": "Brazil",
+      "domain": "amazon.com.br",
+      "marketplace_id": "A2Q3Y263D00KWC",
+      "country_code": "BR",
+      "currency": "BRL",
+      "endpoint": "https://sellingpartnerapi-na.amazon.com",
+      "region": "na"
+    }
+  },
+  "europe": {
+    "uk": {
+      "name": "United Kingdom",
+      "domain": "amazon.co.uk",
+      "marketplace_id": "A1F83G8C2ARO7P",
+      "country_code": "GB",
+      "currency": "GBP",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "de": {
+      "name": "Germany",
+      "domain": "amazon.de",
+      "marketplace_id": "A1PA6795UKMFR9",
+      "country_code": "DE",
+      "currency": "EUR",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "fr": {
+      "name": "France",
+      "domain": "amazon.fr",
+      "marketplace_id": "A13V1IB3VIYZZH",
+      "country_code": "FR",
+      "currency": "EUR",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "it": {
+      "name": "Italy",
+      "domain": "amazon.it",
+      "marketplace_id": "APJ6JRA9NG5V4",
+      "country_code": "IT",
+      "currency": "EUR",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "es": {
+      "name": "Spain",
+      "domain": "amazon.es",
+      "marketplace_id": "A1RKKUPIHCS9HS",
+      "country_code": "ES",
+      "currency": "EUR",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "nl": {
+      "name": "Netherlands",
+      "domain": "amazon.nl",
+      "marketplace_id": "A1805IZSGTT6HS",
+      "country_code": "NL",
+      "currency": "EUR",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "se": {
+      "name": "Sweden",
+      "domain": "amazon.se",
+      "marketplace_id": "A2NODRKZP88ZB9",
+      "country_code": "SE",
+      "currency": "SEK",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "pl": {
+      "name": "Poland",
+      "domain": "amazon.pl",
+      "marketplace_id": "A1C3SOZRARQ6R3",
+      "country_code": "PL",
+      "currency": "PLN",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "tr": {
+      "name": "Turkey",
+      "domain": "amazon.com.tr",
+      "marketplace_id": "A33AVAJ2PDY3EV",
+      "country_code": "TR",
+      "currency": "TRY",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "ae": {
+      "name": "United Arab Emirates",
+      "domain": "amazon.ae",
+      "marketplace_id": "A2VIGQ35RCS4UG",
+      "country_code": "AE",
+      "currency": "AED",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    },
+    "in": {
+      "name": "India",
+      "domain": "amazon.in",
+      "marketplace_id": "A21TJRUUN4KGV",
+      "country_code": "IN",
+      "currency": "INR",
+      "endpoint": "https://sellingpartnerapi-eu.amazon.com",
+      "region": "eu"
+    }
+  },
+  "far_east": {
+    "jp": {
+      "name": "Japan",
+      "domain": "amazon.co.jp",
+      "marketplace_id": "A1VC38T7YXB528",
+      "country_code": "JP",
+      "currency": "JPY",
+      "endpoint": "https://sellingpartnerapi-fe.amazon.com",
+      "region": "fe"
+    },
+    "au": {
+      "name": "Australia",
+      "domain": "amazon.com.au",
+      "marketplace_id": "A39IBJ37TRP1C6",
+      "country_code": "AU",
+      "currency": "AUD",
+      "endpoint": "https://sellingpartnerapi-fe.amazon.com",
+      "region": "fe"
+    },
+    "sg": {
+      "name": "Singapore",
+      "domain": "amazon.sg",
+      "marketplace_id": "A19VAU5U5O7RUS",
+      "country_code": "SG",
+      "currency": "SGD",
+      "endpoint": "https://sellingpartnerapi-fe.amazon.com",
+      "region": "fe"
+    }
+  }
+}
