@@ -1,30 +1,53 @@
 /**
- * Credential Management System
- * Supports two sources: dotenv file and Neon database
+ * Multi-tenant Credential Management System
+ * Supports organization-scoped credentials
  */
 
 const { neon } = require('@neondatabase/serverless');
 const { getParameter } = require('../aws/ssm');
 
-// Cache for credentials
-let credentialCache = {
-  source: null,
-  data: null,
-  timestamp: null,
-};
-
+let credentialCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-/**
- * Get credential source preference
- * Reads from environment variable: CREDENTIAL_SOURCE (dotenv | neon | ssm)
- */
 function getCredentialSource() {
-  return process.env.CREDENTIAL_SOURCE || 'ssm'; // Default to SSM Parameter Store
+  return process.env.CREDENTIAL_SOURCE || 'neon'; // Default to Neon for multi-tenant
 }
 
 /**
- * Fetch credentials from dotenv (environment variables)
+ * Fetch credentials from Neon database (organization-scoped)
+ */
+async function getCredentialsFromNeon(marketplace, organizationId) {
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is not set');
+  }
+
+  const sql = neon(databaseUrl);
+
+  try {
+    const result = await sql`
+      SELECT credentials 
+      FROM api_credentials 
+      WHERE organization_id = ${organizationId}
+      AND marketplace = ${marketplace}
+      AND is_active = true
+      LIMIT 1
+    `;
+
+    if (!result || result.length === 0) {
+      throw new Error(`No active credentials found for ${marketplace} in organization ${organizationId}`);
+    }
+
+    return result[0].credentials;
+  } catch (error) {
+    console.error(`Error fetching credentials from Neon:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch credentials from environment (single-tenant fallback)
  */
 async function getCredentialsFromEnv(marketplace) {
   const prefix = marketplace.toUpperCase();
@@ -40,7 +63,6 @@ async function getCredentialsFromEnv(marketplace) {
     credentials.marketplaceId = process.env.AMAZON_MARKETPLACE_ID || 'ATVPDKIKX0DER';
   }
 
-  // Validate required fields
   if (!credentials.clientId || !credentials.clientSecret) {
     throw new Error(`Missing ${marketplace} credentials in environment variables`);
   }
@@ -49,139 +71,76 @@ async function getCredentialsFromEnv(marketplace) {
 }
 
 /**
- * Fetch credentials from Neon database
+ * Main function to get credentials (multi-tenant aware)
  */
-async function getCredentialsFromNeon(marketplace) {
-  const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
-  
-  if (!databaseUrl) {
-    throw new Error('NEON_DATABASE_URL is not set');
-  }
-
-  const sql = neon(databaseUrl);
-
-  try {
-    const result = await sql`
-      SELECT credentials 
-      FROM api_credentials 
-      WHERE marketplace = ${marketplace} 
-      AND is_active = true
-      LIMIT 1
-    `;
-
-    if (!result || result.length === 0) {
-      throw new Error(`No active credentials found for ${marketplace} in database`);
-    }
-
-    const credentials = result[0].credentials;
-    
-    // Validate structure
-    if (!credentials.clientId || !credentials.clientSecret) {
-      throw new Error(`Invalid credentials structure for ${marketplace} in database`);
-    }
-
-    return credentials;
-  } catch (error) {
-    console.error(`Error fetching credentials from Neon for ${marketplace}:`, error);
-    throw error;
-  }
-}
-
-/**
- * Fetch credentials from AWS Systems Manager Parameter Store
- */
-async function getCredentialsFromSSM(marketplace) {
-  const credentials = {
-    clientId: await getParameter(`/marketplace-sync/${marketplace}/client-id`),
-    clientSecret: await getParameter(`/marketplace-sync/${marketplace}/client-secret`),
-  };
-
-  if (marketplace === 'amazon') {
-    credentials.refreshToken = await getParameter('/marketplace-sync/amazon/refresh-token');
-    credentials.sellerId = await getParameter('/marketplace-sync/amazon/seller-id');
-    credentials.marketplaceId = await getParameter('/marketplace-sync/amazon/marketplace-id');
-  }
-
-  return credentials;
-}
-
-/**
- * Main function to get credentials based on configured source
- */
-async function getCredentials(marketplace, forceRefresh = false) {
+async function getCredentials(marketplace, organizationId, forceRefresh = false) {
   const source = getCredentialSource();
-  const cacheKey = `${marketplace}-${source}`;
+  const cacheKey = `${organizationId}-${marketplace}-${source}`;
 
   // Check cache
-  if (
-    !forceRefresh &&
-    credentialCache.source === cacheKey &&
-    credentialCache.data &&
-    credentialCache.timestamp &&
-    Date.now() - credentialCache.timestamp < CACHE_TTL
-  ) {
-    console.log(`Using cached credentials for ${marketplace} from ${source}`);
-    return credentialCache.data;
+  const cached = credentialCache.get(cacheKey);
+  if (!forceRefresh && cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
   }
-
-  console.log(`Fetching credentials for ${marketplace} from ${source}`);
 
   let credentials;
 
   try {
     switch (source) {
+      case 'neon':
+      case 'database':
+        credentials = await getCredentialsFromNeon(marketplace, organizationId);
+        break;
+      
       case 'dotenv':
       case 'env':
         credentials = await getCredentialsFromEnv(marketplace);
         break;
       
-      case 'neon':
-      case 'database':
-        credentials = await getCredentialsFromNeon(marketplace);
-        break;
-      
       case 'ssm':
       case 'aws':
       default:
-        credentials = await getCredentialsFromSSM(marketplace);
+        // SSM with organization prefix
+        credentials = await getCredentialsFromSSM(marketplace, organizationId);
         break;
     }
 
     // Update cache
-    credentialCache = {
-      source: cacheKey,
+    credentialCache.set(cacheKey, {
       data: credentials,
       timestamp: Date.now(),
-    };
+    });
 
     return credentials;
   } catch (error) {
-    console.error(`Failed to fetch credentials for ${marketplace} from ${source}:`, error);
-    throw new Error(`Failed to load ${marketplace} credentials from ${source}: ${error.message}`);
+    console.error(`Failed to fetch credentials:`, error);
+    throw error;
   }
 }
 
-/**
- * Clear credential cache
- */
-function clearCredentialCache() {
-  credentialCache = {
-    source: null,
-    data: null,
-    timestamp: null,
+async function getCredentialsFromSSM(marketplace, organizationId) {
+  const prefix = `/marketplace-sync/org-${organizationId}/${marketplace}`;
+  
+  const credentials = {
+    clientId: await getParameter(`${prefix}/client-id`),
+    clientSecret: await getParameter(`${prefix}/client-secret`),
   };
+
+  if (marketplace === 'amazon') {
+    credentials.refreshToken = await getParameter(`${prefix}/refresh-token`);
+    credentials.sellerId = await getParameter(`${prefix}/seller-id`);
+    credentials.marketplaceId = await getParameter(`${prefix}/marketplace-id`);
+  }
+
+  return credentials;
 }
 
-/**
- * Get current credential source
- */
-function getCurrentSource() {
-  return getCredentialSource();
+function clearCredentialCache() {
+  credentialCache.clear();
 }
 
 module.exports = {
   getCredentials,
   clearCredentialCache,
-  getCurrentSource,
   getCredentialSource,
 };
