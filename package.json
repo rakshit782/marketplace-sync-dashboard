@@ -1,39 +1,25 @@
 {
   "name": "marketplace-sync-dashboard",
-  "version": "0.1.0",
-  "private": true,
+  "version": "2.0.0",
+  "description": "Multi-tenant marketplace sync platform for Amazon & Walmart",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:frontend": "cd frontend && npm run build",
-    "start": "next start",
-    "lint": "next lint",
-    "cdk:deploy": "cd aws/cdk && npm install && cdk deploy",
-    "cdk:destroy": "cd aws/cdk && cdk destroy",
-    "deploy:lambda": "./scripts/deploy-lambda.sh"
+    "deploy": "./scripts/deploy.sh",
+    "setup-creds": "./scripts/setup-credentials.sh",
+    "test-api": "./scripts/test-api.sh",
+    "trigger-sync": "./scripts/trigger-sync.sh"
   },
-  "dependencies": {
-    "next": "^14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "@aws-sdk/client-dynamodb": "^3.500.0",
-    "@aws-sdk/lib-dynamodb": "^3.500.0",
-    "@aws-sdk/client-ssm": "^3.500.0",
-    "axios": "^1.6.0",
-    "zod": "^3.22.0",
-    "@tanstack/react-table": "^8.11.0",
-    "@tanstack/react-query": "^5.17.0",
-    "date-fns": "^3.0.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.3.0",
-    "@types/node": "^20.10.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^3.4.0",
-    "eslint": "^8.55.0",
-    "eslint-config-next": "^14.2.0"
+  "keywords": [
+    "marketplace",
+    "amazon",
+    "walmart",
+    "sync",
+    "saas",
+    "multi-tenant"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rakshit782/marketplace-sync-dashboard.git"
   }
 }
