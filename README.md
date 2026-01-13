@@ -2,157 +2,165 @@
 
 Centralized dashboard to manage Amazon Seller Central and Walmart Seller Center listings, pricing, and inventory.
 
-## Project Structure
+![Architecture](https://img.shields.io/badge/AWS-Free%20Tier-orange) ![Node.js](https://img.shields.io/badge/Node.js-18+-green) ![React](https://img.shields.io/badge/React-18-blue)
 
-This project uses a clean, modular architecture:
+## ✨ Features
+
+- 🔄 **Automated Sync**: Scheduled jobs sync products from Amazon & Walmart
+- 📊 **Unified Dashboard**: View all products in one place
+- 🛠️ **Bulk Operations**: Update pricing, inventory, and content across marketplaces
+- 🏗️ **Modular Architecture**: Each API endpoint = separate Lambda function
+- 💰 **Cost-Effective**: Runs on AWS Free Tier ($0-5/month)
+- 🚀 **Production-Ready**: Complete CI/CD with GitHub Actions
+
+## 🏗️ Architecture
 
 ```
 src/api/{marketplace}/{function}/
+  ├── amazon/
+  │   ├── products/  → fetch, get, update
+  │   ├── inventory/ → get
+  │   └── pricing/   → get
+  └── walmart/
+      ├── products/  → fetch, get, update
+      ├── inventory/ → get, update
+      └── pricing/   → update
 ```
 
 See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete details.
 
-## Features
-
-- ✅ Modular API architecture (each endpoint = separate Lambda)
-- ✅ Fetch products from Amazon SP-API and Walmart Marketplace API
-- ✅ Get single product by SKU
-- ✅ Update product listings (title, description, etc.)
-- ✅ Get inventory levels
-- ✅ Update pricing and inventory
-- ✅ Shared authentication libraries with token caching
-- ✅ DynamoDB for product storage
-- ✅ AWS Parameter Store for secure credentials
-- ✅ Automated sync jobs (EventBridge)
-
-## Tech Stack
-
-- **Backend**: AWS Lambda (Node.js 18.x)
-- **API**: API Gateway REST API
-- **Database**: DynamoDB (Free Tier: 25GB)
-- **Authentication**: AWS Systems Manager Parameter Store
-- **Infrastructure**: AWS CDK (TypeScript)
-- **Deployment**: AWS (Free Tier optimized)
-
-## API Organization
-
-### Amazon SP-API
-- `src/api/amazon/products/fetch.js` - Fetch all products
-- `src/api/amazon/products/get.js` - Get single product
-- `src/api/amazon/products/update.js` - Update product
-- `src/api/amazon/inventory/get.js` - Get FBA inventory
-- `src/api/amazon/pricing/get.js` - Get pricing
-
-### Walmart Marketplace API
-- `src/api/walmart/products/fetch.js` - Fetch all items
-- `src/api/walmart/products/get.js` - Get single item
-- `src/api/walmart/products/update.js` - Update item
-- `src/api/walmart/inventory/get.js` - Get inventory
-- `src/api/walmart/inventory/update.js` - Update inventory
-- `src/api/walmart/pricing/update.js` - Update pricing
-
-### Shared Libraries
-- `src/lib/auth/amazon.js` - Amazon authentication with caching
-- `src/lib/auth/walmart.js` - Walmart authentication with caching
-- `src/lib/aws/ssm.js` - Parameter Store utilities
-- `src/lib/aws/dynamodb.js` - DynamoDB operations
-
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
 - AWS Account with CLI configured
-- Amazon Seller Central account with SP-API access
-- Walmart Seller account with API credentials
+- Node.js 18+
+- Amazon Seller Central API credentials
+- Walmart Marketplace API credentials
 
-### Installation
+### Deploy in 3 Commands
 
 ```bash
-# Clone repository
+# 1. Clone and deploy
 git clone https://github.com/rakshit782/marketplace-sync-dashboard.git
 cd marketplace-sync-dashboard
+chmod +x scripts/*.sh
+./scripts/deploy.sh
 
-# Install dependencies
-npm install
+# 2. Set up credentials
+./scripts/setup-credentials.sh
 
-# Install CDK dependencies
-cd aws/cdk
-npm install
-cd ../..
+# 3. Access your dashboard!
+# URL will be shown in deployment output
 ```
 
-### Deployment
+## 📚 Documentation
 
-1. **Deploy Infrastructure**
-```bash
-cd aws/cdk
-cdk bootstrap  # First time only
-cdk deploy
-```
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide
+- **[PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)** - Architecture details
+- **[API Documentation](#api-endpoints)** - Below
 
-2. **Store API Credentials**
-```bash
-aws ssm put-parameter --name "/marketplace-sync/amazon/client-id" --value "YOUR_VALUE" --type "SecureString"
-aws ssm put-parameter --name "/marketplace-sync/amazon/client-secret" --value "YOUR_VALUE" --type "SecureString"
-aws ssm put-parameter --name "/marketplace-sync/amazon/refresh-token" --value "YOUR_VALUE" --type "SecureString"
-aws ssm put-parameter --name "/marketplace-sync/amazon/seller-id" --value "YOUR_SELLER_ID" --type "String"
-aws ssm put-parameter --name "/marketplace-sync/amazon/marketplace-id" --value "ATVPDKIKX0DER" --type "String"
-
-aws ssm put-parameter --name "/marketplace-sync/walmart/client-id" --value "YOUR_VALUE" --type "SecureString"
-aws ssm put-parameter --name "/marketplace-sync/walmart/client-secret" --value "YOUR_VALUE" --type "SecureString"
-```
-
-3. **Get API Endpoint**
-```bash
-# CDK will output your API Gateway URL
-API Gateway URL: https://xxxxx.execute-api.us-east-1.amazonaws.com/prod
-```
-
-## API Endpoints
+## 🔌 API Endpoints
 
 Base URL: `https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/prod`
 
-### Amazon
-- `GET /api/amazon/products` - Fetch products
-- `GET /api/amazon/products/{sku}` - Get product
-- `PATCH /api/amazon/products/{sku}` - Update product
-- `GET /api/amazon/inventory?skus=SKU1,SKU2` - Get inventory
-- `GET /api/amazon/pricing?skus=SKU1,SKU2` - Get pricing
+### Amazon SP-API
 
-### Walmart
-- `GET /api/walmart/products?limit=50&offset=0` - Fetch items
-- `GET /api/walmart/products/{sku}` - Get item
-- `PUT /api/walmart/products/{sku}` - Update item
-- `GET /api/walmart/inventory?sku=SKU` - Get inventory
-- `PUT /api/walmart/inventory` - Update inventory
-- `PUT /api/walmart/pricing` - Update pricing
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/amazon/products` | POST | Fetch all products |
+| `/api/amazon/products/{sku}` | GET | Get single product |
+| `/api/amazon/products/{sku}` | PATCH | Update product |
+| `/api/amazon/inventory` | GET | Get FBA inventory |
+| `/api/amazon/pricing` | GET | Get pricing |
 
-## Adding New Marketplace
+### Walmart Marketplace API
 
-1. Create marketplace folder structure:
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/walmart/products` | GET | Fetch all items |
+| `/api/walmart/products/{sku}` | GET | Get single item |
+| `/api/walmart/products/{sku}` | PUT | Update item |
+| `/api/walmart/inventory` | GET | Get inventory |
+| `/api/walmart/inventory` | PUT | Update inventory |
+| `/api/walmart/pricing` | PUT | Update pricing |
+
+## 🔧 Utility Scripts
+
 ```bash
-mkdir -p src/api/ebay/products
+# Deploy infrastructure and frontend
+./scripts/deploy.sh
+
+# Set up API credentials interactively
+./scripts/setup-credentials.sh
+
+# Test API endpoints
+./scripts/test-api.sh <API_URL>
+
+# Manually trigger sync
+./scripts/trigger-sync.sh [amazon|walmart|both]
+
+# Enable scheduled sync jobs
+./scripts/enable-sync.sh
 ```
 
-2. Add API functions (fetch.js, get.js, update.js)
+## 🔄 Automated Sync
 
-3. Create authentication library:
+Sync engines automatically fetch products and store in DynamoDB:
+
+- **Amazon**: Every 1 hour (disabled by default)
+- **Walmart**: Every 2 hours (disabled by default)
+
+Enable with:
 ```bash
-touch src/lib/auth/ebay.js
+./scripts/enable-sync.sh
 ```
 
-4. Update CDK stack to add Lambda functions and routes
+## 💰 Cost Breakdown (AWS Free Tier)
 
-## Cost Optimization (AWS Free Tier)
+| Service | Free Tier | After Free Tier |
+|---------|-----------|----------------|
+| Lambda | 1M requests/month | $0.20/million |
+| DynamoDB | 25GB storage | Always free |
+| API Gateway | 1M calls/month (12 mo) | $3.50/million |
+| S3 | 5GB storage | $0.023/GB |
+| CloudFront | 50GB transfer (12 mo) | $0.085/GB |
 
-- **Lambda**: 1M requests/month (always free)
-- **DynamoDB**: 25GB storage (always free)
-- **API Gateway**: 1M calls/month (first 12 months)
-- **Parameter Store**: 10,000 parameters (always free)
+**Estimated monthly cost**: $0-5
 
-**Estimated cost**: $0/month within free tier
+## 🔐 Security
 
-## License
+- ✅ API credentials encrypted in AWS Parameter Store
+- ✅ Lambda functions with minimal IAM permissions
+- ✅ API Gateway throttling enabled
+- ✅ HTTPS only (CloudFront + API Gateway)
 
-MIT
+## 🤝 Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) file
+
+## 🙏 Acknowledgments
+
+- Amazon Selling Partner API
+- Walmart Marketplace API
+- AWS CDK
+- React + Vite + TailwindCSS
+
+## 📞 Support
+
+For issues or questions:
+- Open an issue on GitHub
+- Check [DEPLOYMENT.md](DEPLOYMENT.md) for troubleshooting
+
+---
+
+**Built with ❤️ for multi-marketplace sellers**
