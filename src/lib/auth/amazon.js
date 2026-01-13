@@ -2,7 +2,7 @@
  * Amazon SP-API Authentication
  */
 
-const { getParameter } = require('../aws/ssm');
+const { getCredentials } = require('../config/credentials');
 
 let cachedToken = null;
 let tokenExpiry = 0;
@@ -14,9 +14,7 @@ async function getAmazonAccessToken() {
   }
 
   try {
-    const clientId = await getParameter('/marketplace-sync/amazon/client-id');
-    const clientSecret = await getParameter('/marketplace-sync/amazon/client-secret');
-    const refreshToken = await getParameter('/marketplace-sync/amazon/refresh-token');
+    const credentials = await getCredentials('amazon');
 
     const response = await fetch('https://api.amazon.com/auth/o2/token', {
       method: 'POST',
@@ -25,9 +23,9 @@ async function getAmazonAccessToken() {
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-        client_id: clientId,
-        client_secret: clientSecret,
+        refresh_token: credentials.refreshToken,
+        client_id: credentials.clientId,
+        client_secret: credentials.clientSecret,
       }),
     });
 

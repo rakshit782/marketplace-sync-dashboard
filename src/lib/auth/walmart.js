@@ -2,7 +2,8 @@
  * Walmart Marketplace API Authentication
  */
 
-const { getParameter } = require('../aws/ssm');
+const { getCredentials } = require('../config/credentials');
+const crypto = require('crypto');
 
 let cachedToken = null;
 let tokenExpiry = 0;
@@ -14,10 +15,9 @@ async function getWalmartAccessToken() {
   }
 
   try {
-    const clientId = await getParameter('/marketplace-sync/walmart/client-id');
-    const clientSecret = await getParameter('/marketplace-sync/walmart/client-secret');
+    const credentials = await getCredentials('walmart');
 
-    const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const auth = Buffer.from(`${credentials.clientId}:${credentials.clientSecret}`).toString('base64');
 
     const response = await fetch('https://marketplace.walmartapis.com/v3/token', {
       method: 'POST',
